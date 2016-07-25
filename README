@@ -1,0 +1,161 @@
+==========================================================================================
+    QUICK START
+==========================================================================================
+     Below is set of steps to edit, compile and run simulations
+
+==========================================================================================
+    - COMPILE AND RUN
+
+      Code is parallelized through MPI so mpi compiler is needed. Compile the code via
+
+         mpif90 params.f90 global_vars.f90 merstwist.f90 sorting.f90 functions.f90 nlist.f90 grow.f90 divide.f90 movie.f90 embryo_model.f90
+
+      * Order is important since some of the modules are used in other source files.
+      ** Source files are params.f90 global_vars.f90 merstwist.f90 sorting.f90 functions.f90 nlist.f90 grow.f90 divide.f90 movie.f90 and main: embryo_model.f90
+      *** Optional input is writecont file which contains initial configuration of the system. Flag indicating there is an input file is hard coded in common.f90->readcont. 
+See Modules below for details.
+
+
+      Run code via 
+          
+          mpirun -n 8 ./a.out 
+ 
+      This will run code with 8 processes. Number of processes is hardcoded in common.f90->iter (2^inter = number of processes). See Modules below for details.
+
+
+==========================================================================================
+ - LIST OF OUTPUT FILES
+
+   List of desired output files is controlled by following flags defined in common.f90
+     - writecont: 
+           record configuration of the system. output is “writecont” file which later can be used and input configuration file for simulations.
+     - wr_node: 
+           record node positions along AP and lateral axis with stds. output is “nodcord” file which is used in node.m analyzer scrip.
+     - wr_dens: 
+           record cell number density at specific time steps. output is “densxxx” files which is used in density movies and number_density analyzer scripts.
+     - wr_border: 
+           record cell lateral borders. output is “borders” file. DEPRECATED
+     - wr_traj: 
+           record cells positions at specific time steps. output is “stat” file which is used in various analyzer scripts such as MSD, trajectories etc. Also used to generate trajectory movies.
+     - wr_ncell: 
+           record number of anterior and posterior cells in the system. output is “ncell” file used in cell_number analyzer scripts
+     - wr_psfil: 
+           record file that later translates into simulation movie. output is “psfil” postscript file used in movie.pl analyzer script.
+
+
+
+ - OUPUT FILE FORMATS:
+       
+      “writecont”:
+
+            X1   Y1   R1
+            ..   ..   ..
+            XN   YN   RN
+        
+       X, Y are AP and lateral positions of cell. R is its hard core radius, 1, 2, … N spans number of cells in system
+ 
+
+      “nodcord”: 
+
+           TIME    X    STD_X    Y    STD_Y
+           …
+ 
+       TIME is time step. X, Y are AP and lateral positions of node. Node positions are recorded each 1000 timsteps. STD_X and STD_Y denote standard deviation of the node’s position over those 1000 steps.
+
+
+
+       “ncell”:
+
+           TIME    N_ANTERIOR    N_POSTERIOR
+           …
+
+       TIME is time step. N_ANTERIOR and N_POSTERIOR are number of anterior and posterior cells in the system.
+
+
+       “densXXX”
+
+          MIN_X     MIN_Y   N_GRID_X    N_GRID_Y
+          GRID_I    GRID_J  N_CELLS
+          …
+
+       First line is the minimum of X,Y coordinates (the lower left border point of the system, needed for grid subdivision of the system) and number of cell grids in X and Y directions
+       Second and the rest of the lines loop over grid cells (grid indices) and show total number of simulated cells in the given grid cell.
+
+
+       “stat”:
+
+         TIME    ID    X    Y    X_NODE    Y_NODE
+         …
+         
+        TIME is the time step, ID is the cell id, (X, Y) are cell’s coordinates, (X_NODE, Y_NODE) are node’s coordinates at given time step.
+
+
+
+        “psfil”. 
+           
+           Postscript file which which plots circles for cells centred at (X, Y) and with hard and soft radii (R, DELTA).
+          
+==========================================================================================
+- LIST OF MODULES WITH CORRESPONDING CRUCIAL FUNCTIONALITY
+
+
+    *params*: module of simulation parameters.
+    
+        Sets following properties of the system
+           - number of processors for parallelization
+           - cell characteristics such as cell radii, cell-cell interaction parameters
+           - system borders (AP and lateral)
+           - what outputs should be produced? described above.
+
+   *global_vars*: module of variables shared across processors
+   
+   *nlist*: module to generate neighbour lists for fast integration as well as calculate cell number density
+        
+       Sets following properties of the system
+          - cell-cell interaction cutoff distances as well as number density cutoffs are set here.
+
+   *divide*: module performes division of a parent cell. 
+
+   *grow*: module for cell growth
+       
+       Sets following properties of the system
+          - cell contact mediated suppression of the growth (*dens_upper_0* and *dens_upper_1* for anterior and posterior cells)
+         - growth rate of individual cell gr0
+
+
+
+   *functions*: module for various useful function. list below reflects only ones that are needed to submit new set of simulations. more info is in the comments of the code itself
+
+
+        - assign_cell_type: 
+            - defines cell types based on their relative position from the node. 
+            - this is the part of the code that defines wild type, LOF and GOF types of simulations.
+
+        - diffc: 
+            - defines the diffusion coefficient for a given cell based on its type and the number of nearest neighbours. Change this part if difference diffusion behaviour is desired.
+
+       - calc_f:
+           - calculates cell-cell interaction forces based on elastic spring forces. Change interaction forces here if desired. 
+           The softness of well walls is set here.
+
+        *** other functions are related to the allocation of data arrays, and dat communication between different processes  
+
+
+ 
+
+   *embryo_model*: main module.
+
+           -read input files and writes outputs.   
+           - implements MPI
+           - integrates equations of motions via brownian motion algorithm
+           - sets anterior/posterior diffusion coefficients and simulation time step
+      
+      
+       
+         
+
+
+
+      
+
+ 
