@@ -8,7 +8,7 @@
 
       Code is parallelized through MPI so mpi compiler is needed. Compile the code via
 
-         mpif90 params.f90 global_vars.f90 merstwist.f90 sorting.f90 functions.f90 nlist.f90 grow.f90 divide.f90 movie.f90 embryo_model.f90
+         mpif90 params.f90 merstwist.f90 sorting.f90 functions.f90 nlist.f90 grow.f90 divide.f90 movie.f90 embryo_model.f90
 
       * Order is important since some of the modules are used in other source files.
       ** Source files are params.f90 global_vars.f90 merstwist.f90 sorting.f90 functions.f90 nlist.f90 grow.f90 divide.f90 movie.f90 and main: embryo_model.f90
@@ -99,7 +99,7 @@ See Modules below for details.
 - LIST OF MODULES WITH CORRESPONDING CRUCIAL FUNCTIONALITY
 
 
-    *params*: module of simulation parameters.
+    *params*: module of simulation parameters and global variables.
     
         Sets following properties of the system
            - number of processors for parallelization
@@ -107,7 +107,6 @@ See Modules below for details.
            - system borders (AP and lateral)
            - what outputs should be produced? described above.
 
-   *global_vars*: module of variables shared across processors
    
    *nlist*: module to generate neighbour lists for fast integration as well as calculate cell number density
         
